@@ -1,0 +1,35 @@
+# basic stuff
+dist
+ideas/*
+ideas
+
+# hmm
+.idea
+dist/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+bun.lockb
+
+# Optional npm cache directory
+.npm
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.local
+
+# TernJS port file
+.tern-port
+yarn.lock
+eslint_report.json

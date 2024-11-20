@@ -1,0 +1,47 @@
+{
+  "name": "whmcs-sdk",
+  "version": "0.0.1",
+  "description": "A simple WHMCS API wrapper for Node.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "docs": "typedoc",
+    "test": "mocha test/**/*.test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NodeByteHosting/whmcs-sdk.git"
+  },
+  "keywords": [
+    "whmcs",
+    "api",
+    "sdk",
+    "wrapper",
+    "nodejs"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "bluebird": "^3.7.2",
+    "chai": "^5.1.2",
+    "https-proxy-agent": "^5.0.0",
+    "mocha": "^10.8.2",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "@types/axios": "^0.14.4",
+    "@types/bluebird": "^3.5.42",
+    "@types/xml2js": "^0.4.14",
+    "typedoc": "^0.26.11",
+    "typescript": "^5.6.3"
+  }
+}

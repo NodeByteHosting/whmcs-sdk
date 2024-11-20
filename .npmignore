@@ -1,0 +1,13 @@
+node_modules/
+docs/
+logs/
+*.log
+
+!dist/
+.eslintrc
+.gitattributes
+.gitignore
+.github/
+package-lock.json
+CHANGELOG.md
+./CHANGELOG.md

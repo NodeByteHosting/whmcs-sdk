@@ -1,0 +1,16 @@
+{
+    "out": "./docs/",
+    "name": "whmcs-sdk",
+    "readme": "./README.md",
+    "entryPoints": [
+        "src/index.ts",
+        "src/typings"
+    ],
+    "darkHighlightTheme": "dark-plus",
+    "lightHighlightTheme": "light-plus",
+    "githubPages": true,
+    "excludeExternals": false,
+    "excludePrivate": true,
+    "excludeInternal": false,
+    "theme": "default"
+}
