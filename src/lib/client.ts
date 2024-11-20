@@ -1,137 +1,147 @@
-import { utils } from './utils';
-import xml2js from 'xml2js';
-import axios, { AxiosInstance } from 'axios';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import { Configs, AxiosConfig } from '../typings';
-import querystring from 'querystring';
+import request, { CoreOptions, UriOptions } from 'request';
+import { WHMCSOptions, ModemOptions } from '../typings/index';
 
-export class WhmcsClient {
-  private apiSecret: string | null = null;
-  private apiIdentifier: string | null = null;
-  private username: string | null = null;
-  private password: string | null = null;
-  private accessKey: string | null = null;
-  private serverUrl: string | null = null;
-  private Promise: PromiseConstructor = global.Promise;
-  private responseType: string = 'json';
-  private userAgent: string | null = null;
-  private proxyUrl: string | null = null;
-  private axiosInstance: AxiosInstance | null = null;
-  private timeout: number = 0;
+type Callback = (error: any, response: any) => void;
 
-  constructor(config: Configs = {}) {
-    this.username = config.username ?? this.username;
-    this.password = config.password ?? this.password;
-    this.serverUrl = config.serverUrl ?? this.serverUrl;
-    this.timeout = config.timeout ?? this.timeout;
-    this.apiIdentifier = config.apiIdentifier ?? this.apiIdentifier;
-    this.apiSecret = config.apiSecret ?? this.apiSecret;
-    this.accessKey = config.accessKey ?? this.accessKey;
-    this.Promise = config.Promise ?? this.Promise;
-    this.responseType = config.responseType ?? this.responseType;
-    this.userAgent = config.userAgent ?? this.userAgent;
-    this.proxyUrl = config.proxyUrl ?? this.proxyUrl;
+export class whmcsApi {
+  private opts: WHMCSOptions;
 
-    if (this.Promise != null && typeof this.Promise.resolve !== 'function') {
-      throw new Error('Invalid promise library.');
-    }
-
-    const axiosConf: AxiosConfig = {
-      baseUrl: this.serverUrl as string,
-      timeout: this.timeout,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': '@nodebyte/whmcs-sdk'
+  constructor(opts: WHMCSOptions) {
+    ['host', 'identifier', 'secret'].forEach(name => {
+      if (!opts.hasOwnProperty(name)) {
+        throw new Error(`[whmcs-sdk]: missing required option ${name}`);
       }
+    });
+
+    this.opts = {
+      endpoint: 'includes/api.php',
+      ...opts
     };
-
-    if (this.userAgent != null) {
-      axiosConf.headers['User-Agent'] = this.userAgent;
-    }
-
-    if (this.proxyUrl != null) {
-      axiosConf['httpsAgent'] = new HttpsProxyAgent(this.proxyUrl);
-    }
-
-    this.axiosInstance = axios.create(axiosConf);
   }
 
   /**
-   * Executes a WHMCS' API action with given parameters.
-   * WHMCS' official action list available here: https://developers.whmcs.com/api/api-index/
-   * @param action Command name
-   * @param parameters (optional) Request parameters (JSON Object)
-   * @param callback Optional callback. If not set the method returns a Promise
+   * Sends a request to the WHMCS API
+   * @param opts Options for the request
+   * @param cb Callback function
+   * @returns Promise or void
    */
-  callApi(action: string, parameters?: Record<string, any>, callback?: (err: Error | null, data?: any) => void): Promise<any> | void {
-    const bodyParams = {
-      action: action,
-      username: this.username,
-      password: this.password,
-      identifier: this.apiIdentifier,
-      secret: this.apiSecret,
-      accesskey: this.accessKey,
-      responsetype: this.responseType
+  private modem(opts: ModemOptions, cb?: Callback): Promise<any> | void {
+    const options: UriOptions & CoreOptions = {
+      uri: `https://${this.opts.host}/${this.opts.endpoint}`,
+      method: opts.method || 'POST',
+      qs: {
+        identifier: this.opts.identifier,
+        secret: this.opts.secret,
+        responseType: opts.responsetype || 'json',
+        ...opts
+      },
+      json: true
     };
 
-    if (typeof parameters === 'function' && callback == null) {
-      callback = parameters as any;
-    } else {
-      utils.extend(bodyParams, parameters || {});
+    if (cb) {
+      request(options, cb);
+      return;
     }
 
-    const startRequest = (callback: (err: Error | null, data?: any) => void) => {
-      this.post(bodyParams, (err, data, httpStatusCode) => {
-        if (err) {
-          callback(err);
-        } else if (data.result && data.result === 'error' || data.status && data.status === 'error') {
-          const whmcsError = new Error(`WHMCS Error (${httpStatusCode}): ${data.message}`);
-          callback(whmcsError);
-        } else {
-          callback(null, data);
-        }
-      });
-    };
+    return new Promise((resolve, reject) =>
+      request(options, (e, r) => {
+        if (e) return reject(e);
 
-    if (callback === undefined) {
-      return new this.Promise((resolve, reject) => {
-        startRequest((err, data) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(data);
+        const jsonBody = r.body;
+
+        if (jsonBody.error) return reject(jsonBody.error);
+
+        if (!opts.raw) {
+          const keys = Object.keys(jsonBody);
+          const secKeys = Object.keys(jsonBody[keys[keys.length - 1]]);
+
+          if (secKeys.length === 1) {
+            return resolve(jsonBody[keys[keys.length - 1]][secKeys[0]]);
           }
-        });
-      });
-    } else {
-      startRequest(callback);
-    }
+        }
+
+        return resolve(jsonBody);
+      })
+    );
   }
 
-  private post(bodyParams: Record<string, any>, callback: (err: Error | null, data?: any, httpStatusCode?: number) => void): void {
-    const qs = querystring.stringify(bodyParams);
-    this.axiosInstance!.post('/includes/api.php', qs)
-      .then(resp => {
-        if (resp.headers['content-type'].indexOf('application/xml') > -1) {
-          xml2js.parseString(resp.data, {
-            explicitArray: false
-          }, (err, parsedXml) => {
-            if (err) {
-              callback(new Error('Error parsing xml'));
-            } else if (!parsedXml) {
-              callback(new Error('Empty HTTP response'));
-            } else if (!parsedXml.whmcsapi || !parsedXml.whmcsapi.result) {
-              callback(new Error('Unexpected XML response'));
-            } else {
-              callback(null, parsedXml.whmcsapi, resp.status);
-            }
-          });
-        } else {
-          callback(null, resp.data, resp.status);
-        }
-      }).catch(err => {
-        callback(err);
-      });
+  /**
+   * Calls an action on the WHMCS API
+   * @param action The action to call
+   * @param opts Options for the request
+   * @param cb Callback function
+   * @returns Promise or void
+   */
+  call(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+    if (typeof opts === 'function') {
+      cb = opts;
+      opts = {};
+    }
+
+    return this.modem({ action, ...opts }, cb);
+  }
+
+  /**
+   * Calls a Get action on the WHMCS API
+   * @param action The action to call
+   * @param opts Options for the request
+   * @param cb Callback function
+   * @returns Promise or void
+   */
+  get(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+    if (typeof opts === 'function') {
+      cb = opts;
+      opts = {}
+    }
+
+    return this.modem({ action: `Get${action}`, ...opts }, cb);
+  }
+
+  /**
+   * Calls an Add action on the WHMCS API
+   * @param action The action to call
+   * @param opts Options for the request
+   * @param cb Callback function
+   * @returns Promise or void
+   */
+  add(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+    if (typeof opts === 'function') {
+      cb = opts;
+      opts = {};
+    }
+
+    return this.modem({ action: `Add${action}`, ...opts }, cb);
+  }
+
+  /**
+   * Calls an Update action on the WHMCS API
+   * @param action The action to call
+   * @param opts Options for the request
+   * @param cb Callback function
+   * @returns Promise or void
+   */
+  update(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+    if (typeof opts === 'function') {
+      cb = opts;
+      opts = {};
+    }
+
+    return this.modem({ action: `Update${action}`, ...opts }, cb);
+  }
+
+  /**
+   * Calls a Delete action on the WHMCS API
+   * @param action The action to call
+   * @param opts Options for the request
+   * @param cb Callback function
+   * @returns Promise or void
+   */
+  delete(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+    if (typeof opts === 'function') {
+      cb = opts;
+      opts = {};
+    }
+
+    return this.modem({ action: `Delete${action}`, ...opts }, cb);
   }
 }
-

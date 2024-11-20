@@ -2,23 +2,27 @@
 
 A comprehensive and easy-to-use Node SDK, designed to simplify interactions with the WHMCS API and streamline your development process.
 
+---
+
 ## Table of Contents
-- [Pre-requisites](#pre-requisites)
+- [Useful Info](#useful-info)
 - [Installation](#installation)
+  - [NPM](#npm)
+  - [Bun](#bun)
+  - [Yarn](#yarn)
+- [Implemented Functions](#implemented-functions)
+  - [Main Functions](#main-functions)
+  - [Helper Functions](#helper-functions)
 - [Usage](#usage)
-- [API](#api)
-  - [Client](#client)
-  - [Addons](#addons)
-  - [Authentication](#authentication)
-  - [Servers](#servers)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+  - [Using the client](#using-the-client)
+  - [Using the Helper Functions](#using-the-helper-functions)
 
 ---
 
-## Pre-Requisites
-Install [Node.js](https://nodejs.org/en/) version 20.0.0 or higher.
+## Useful Info
+- Install [Node.js](https://nodejs.org/en/) version 20.0.0 or higher.
+- Only API Credentials are supported for authenticating (username and password is [depreciated](https://developers.whmcs.com/api/authentication/) as of 7.2!)
+- For a full list of Modules/Methods visit the [WHMCS Docs](https://developers.whmcs.com/api/api-index/)
 
 ## Installation
 
@@ -41,10 +45,24 @@ yarn install whmcs-sdk
 
 ---
 
+## Implemented Functions
+There is a variety of pre-made functions you can use to help make your experience more seamless.
+
+### Main Functions
+- call(action, options)
+
+### Helper Functions
+- get(action, options): An alias of `call` but appends `Get` to the name.
+- add(action, options): An alias of `call` but appends `Add` to the name.
+- update(action, options): An alias of `call` but appends `Update` to the name.
+- delete(action, options): An alias of `call` but appends `Delete` to the name.
+
+> The "action" (string) is the name of a [WHMCS API Index](https://developers.whmcs.com/api/api-index/) name. The "options" (object) of any parameters you want to pass in.
+
+---
+
 ## Usage
 To use the module you will first need to import it:
-
-> Fun Fact: this module sets a User-Agent of "@nodebyte/whmcs-sdk"
 
 ```typescript
 import { whmcsApi } from 'whmcs-sdk';
@@ -53,115 +71,31 @@ import { whmcsApi } from 'whmcs-sdk';
 you can then instantiate a new client with options:
 
 ```typescript
-const config = {
-  apiIdentifier: 'your_api_identifier',
-  apiSecret: 'your_api_secret',
-  serverUrl: 'http://127.0.0.1',
-}
-
-const whmcs = new whmcsApi(config);
+const whmcs = new whmcsApi({
+  host: 'yourwebsite.com',
+  identifier: 'api identifier',
+  secret: 'api secret'
+  //endpoint: 'includes/api.php', //only required if you changed the api.php location
+});
 ```
 
-Additionally you can instantiate the client with a admin user
-> Admin passwords should MD5 hashed
+### Using the client
 
 ```typescript
-const config = {
-  username: process.env.WHMCS_USER || 'your_admin_username',
-  password: process.env.WHMCS_PASSWORD || 'your_md5_hashed_password',
-  accesskey: 'your_access_key', //optional (used to bypass IP Restrictions).
-  serverUrl: 'http://127.0.0.1',
-};
+whmcs.call('DomainWhois', {
+  domain: 'whmcs.com'
+}, function (err, res, body) {
+  if (err) return console.log('Error:', err);
 
-const whmcs = new WHMCS(config);
+  console.log('Domain information:', body);
+});
+```
+
+### Using the Helper Functions
+```typescript
+whmcs.get('Servers')
+.then(servers => console.log('Servers:' servers))
+.catch(err => console.error('Error:', err));
 ```
 
 ---
-
-## WHMCS Modules
-We follow [WHMCS' API Index](https://developers.whmcs.com/api/api-index/) structure, which has functions grouped by their respective modules. Below are the available modules and their functions:
-
-## API
-The [WHMCS API Index](https://developers.whmcs.com/api/api-index/) is regularly updated. Please refer to the list below to see which functions are currently implemented in this SDK (expand to show the function list).
-
-<details>
-  <summary>Addons</summary>
-
-  - UpdateClientAddon: updateClientAddon(parameters, [callback])
-</details>
-
-<details>
-  <summary>Affiliates</summary>
-  
-  - AffiliateActivate: affiliateActivate(parameters, [callback])
-  - GetAffiliates: getAffiliates(parameters, [callback])
-</details>
-
-<details>
-  <summary>Authentication</summary>
-  
-  - CreateOAuthCredential: createOAuthCredential(parameters, [callback])
-  - CreateSsoToken: createSsoToken(parameters, [callback])
-  - DeleteOAuthCredential: deleteOAuthCredential(parameters, [callback])
-  - ListOAuthCredentials: listOAuthCredentials(parameters, [callback])
-  - UpdateOAuthCredential: updateOAuthCredential(parameters, [callback])
-  - ValidateLogin: validateLogin(parameters, [callback])
-</details>
-
-<details>
-  <summary>Client</summary>
-
-  - AddClient: addClient(parameters, [callback])
-  - AddContact: addContact(parameters, [callback])
-  - CloseClient: closeClient(parameters, [callback])
-  - DeleteClient: deleteClient(parameters, [callback])
-  - DeleteContact: deleteContact(parameters, [callback])
-  - GetCancelledPackages: getCancelledPackages(parameters, [callback])
-  - GetClientGroups: getClientGroups([callback])
-  - GetClientPassword: getClientPassword(parameters, [callback])
-  - GetClients: getClients(parameters, [callback])
-  - GetClientsAddons: getClientsAddons(parameters, [callback])
-  - GetClientsDetails: getClientsDetails(parameters, [callback])
-  - GetClientsDomains: getClientsDomains(parameters, [callback])
-  - GetClientsProducts: getClientsProducts(parameters, [callback])
-  - GetContacts: getContacts(parameters, [callback])
-  - GetEmails: getEmails(parameters, [callback])
-  - UpdateClient: updateClient(parameters, [callback])
-  - UpdateContact: updateContact(parameters, [callback])
-</details>
-
-<details>
-  <summary>Servers</summary>
-
-  - GetHealthStatus: getHealthStatus(parameters, [callback])
-  - GetServers: getServers(parameters, [callback])
-</details>
-
-<details>
-  <summary>System</summary>
-
-  - AddBannedIp: addBannedIp(parameters, [callback])
-  - DecryptPassword: decryptPassword(parameters, [callback])
-  - EncryptPassword: encryptPassword(parameters, [callback])
-  - GetActivityLog: getActivityLog(parameters, [callback])
-  - GetAdminDetails: getAdminDetails([callback])
-  - GetAdminUsers: getAdminUsers(parameters, [callback])
-  - GetAutomationLog: getAutomationLog(parameters, [callback])
-  - GetConfigurationValue: getConfigurationValue(parameters, [callback])
-  - GetCurrencies: getCurrencies([callback])
-  - GetEmailTemplates: getEmailTemplates(parameters, [callback])
-  - GetPaymentMethods: getPaymentMethods([callback])
-  - GetStaffOnline: getStaffOnline([callback])
-  - GetStats: getStats(parameters, [callback])
-  - GetToDoItems: getToDoItems(parameters, [callback])
-  - GetToDoItemStatuses: getToDoItemStatuses([callback])
-  - LogActivity: logActivity(parameters, [callback])
-  - SendAdminEmail: sendAdminEmail(parameters, [callback])
-  - SendEmail: sendEmail(parameters, [callback])
-  - SetConfigurationValue: setConfigurationValue(parameters, [callback])
-  - TriggerNotificationEvent: triggerNotificationEvent(parameters, [callback])
-  - UpdateAdminNotes: updateAdminNotes(parameters, [callback])
-  - UpdateAnnouncement: updateAnnouncement(parameters, [callback])
-  - UpdateToDoItem: updateToDoItem(parameters, [callback])
-  - WhmcsDetails: whmcsDetails([callback])
-</details>
