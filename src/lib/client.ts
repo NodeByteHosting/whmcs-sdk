@@ -40,29 +40,32 @@ export class whmcsApi {
 
     return new Promise((resolve, reject) => {
       request(options, (e, r) => {
-        if (e) return reject(e);
+        if (e) {
+          if (cb) cb(e, null);
+          return reject(e);
+        }
 
         const jsonBody = r.body;
 
-        if (jsonBody.error) return reject(jsonBody.error);
+        if (jsonBody.error) {
+          if (cb) cb(jsonBody.error, null);
+          return reject(jsonBody.error);
+        }
 
         if (!opts.raw) {
           const keys = Object.keys(jsonBody);
           const secKeys = Object.keys(jsonBody[keys[keys.length - 1]]);
 
           if (secKeys.length === 1) {
-            return resolve(jsonBody[keys[keys.length - 1]][secKeys[0]]);
+            const result = jsonBody[keys[keys.length - 1]][secKeys[0]];
+            if (cb) cb(null, result);
+            return resolve(result);
           }
         }
 
+        if (cb) cb(null, jsonBody);
         return resolve(jsonBody);
       });
-    }).then(result => {
-      if (cb) cb(null, result);
-      return result;
-    }).catch(error => {
-      if (cb) cb(error, null);
-      throw error;
     });
   }
 

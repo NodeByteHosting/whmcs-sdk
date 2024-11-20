@@ -1,6 +1,6 @@
 {
   "name": "whmcs-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A comprehensive and easy-to-use Node SDK, designed to simplify interactions with the WHMCS API and streamline your development process.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
