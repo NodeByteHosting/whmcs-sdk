@@ -23,9 +23,9 @@ export class whmcsApi {
    * Sends a request to the WHMCS API
    * @param opts Options for the request
    * @param cb Callback function
-   * @returns Promise or void
+   * @returns Promise<any>
    */
-  private modem(opts: ModemOptions, cb?: Callback): Promise<any> | void {
+  private modem(opts: ModemOptions, cb?: Callback): Promise<any> {
     const options: UriOptions & CoreOptions = {
       uri: `https://${this.opts.host}/${this.opts.endpoint}`,
       method: opts.method || 'POST',
@@ -38,12 +38,7 @@ export class whmcsApi {
       json: true
     };
 
-    if (cb) {
-      request(options, cb);
-      return;
-    }
-
-    return new Promise((resolve, reject) =>
+    return new Promise((resolve, reject) => {
       request(options, (e, r) => {
         if (e) return reject(e);
 
@@ -61,8 +56,14 @@ export class whmcsApi {
         }
 
         return resolve(jsonBody);
-      })
-    );
+      });
+    }).then(result => {
+      if (cb) cb(null, result);
+      return result;
+    }).catch(error => {
+      if (cb) cb(error, null);
+      throw error;
+    });
   }
 
   /**
@@ -70,9 +71,9 @@ export class whmcsApi {
    * @param action The action to call
    * @param opts Options for the request
    * @param cb Callback function
-   * @returns Promise or void
+   * @returns Promise<any>
    */
-  call(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+  call(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> {
     if (typeof opts === 'function') {
       cb = opts;
       opts = {};
@@ -86,9 +87,9 @@ export class whmcsApi {
    * @param action The action to call
    * @param opts Options for the request
    * @param cb Callback function
-   * @returns Promise or void
+   * @returns Promise<any>
    */
-  get(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+  get(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> {
     if (typeof opts === 'function') {
       cb = opts;
       opts = {};
@@ -102,9 +103,9 @@ export class whmcsApi {
    * @param action The action to call
    * @param opts Options for the request
    * @param cb Callback function
-   * @returns Promise or void
+   * @returns Promise<any>
    */
-  add(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+  add(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> {
     if (typeof opts === 'function') {
       cb = opts;
       opts = {};
@@ -118,9 +119,9 @@ export class whmcsApi {
    * @param action The action to call
    * @param opts Options for the request
    * @param cb Callback function
-   * @returns Promise or void
+   * @returns Promise<any>
    */
-  update(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+  update(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> {
     if (typeof opts === 'function') {
       cb = opts;
       opts = {};
@@ -134,9 +135,9 @@ export class whmcsApi {
    * @param action The action to call
    * @param opts Options for the request
    * @param cb Callback function
-   * @returns Promise or void
+   * @returns Promise<any>
    */
-  delete(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
+  delete(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> {
     if (typeof opts === 'function') {
       cb = opts;
       opts = {};
