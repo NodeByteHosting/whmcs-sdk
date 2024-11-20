@@ -1,7 +1,7 @@
 import request, { CoreOptions, UriOptions } from 'request';
 import { WHMCSOptions, ModemOptions } from '../typings/index';
 
-type Callback = (error: any, response: any) => void;
+type Callback = (error: any, response: any) => any;
 
 export class whmcsApi {
   private opts: WHMCSOptions;
@@ -25,45 +25,40 @@ export class whmcsApi {
    * @param cb Callback function
    * @returns Promise<any>
    */
-  private modem(opts: ModemOptions, cb?: Callback): Promise<any> {
+  private modem(opts: ModemOptions, cb?: Callback): Promise<any> | any {
     const options: UriOptions & CoreOptions = {
       uri: `https://${this.opts.host}/${this.opts.endpoint}`,
       method: opts.method || 'POST',
       qs: {
         identifier: this.opts.identifier,
         secret: this.opts.secret,
-        responseType: opts.responsetype || 'json',
+        responsetype: opts.responsetype || 'json',
         ...opts
       },
       json: true
     };
 
+    if (cb) {
+      return request(options, cb);
+    }
+
     return new Promise((resolve, reject) => {
-      request(options, (e, r) => {
-        if (e) {
-          if (cb) cb(e, null);
-          return reject(e);
-        }
+      request(options, (error, response) => {
+        if (error) return reject(error);
 
-        const jsonBody = r.body;
+        const jsonBody = response.body;
 
-        if (jsonBody.error) {
-          if (cb) cb(jsonBody.error, null);
-          return reject(jsonBody.error);
-        }
+        if (jsonBody.error) return reject(jsonBody.error);
 
         if (!opts.raw) {
           const keys = Object.keys(jsonBody);
-          const secKeys = Object.keys(jsonBody[keys[keys.length - 1]]);
+          const secondKeys = Object.keys(jsonBody[keys[keys.length - 1]]);
 
-          if (secKeys.length === 1) {
-            const result = jsonBody[keys[keys.length - 1]][secKeys[0]];
-            if (cb) cb(null, result);
-            return resolve(result);
+          if (secondKeys.length === 1) {
+            return resolve(jsonBody[keys[keys.length - 1]][secondKeys[0]]);
           }
         }
 
-        if (cb) cb(null, jsonBody);
         return resolve(jsonBody);
       });
     });

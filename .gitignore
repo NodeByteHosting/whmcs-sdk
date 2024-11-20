@@ -6,6 +6,7 @@ ideas
 # hmm
 .idea
 dist/
+test/
 
 # Logs
 logs
