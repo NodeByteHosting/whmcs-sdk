@@ -1,7 +1,7 @@
 {
   "name": "whmcs-sdk",
-  "version": "0.0.2",
-  "description": "A simple WHMCS API wrapper for Node.js",
+  "version": "0.0.3",
+  "description": "A comprehensive and easy-to-use Node SDK, designed to simplify interactions with the WHMCS API and streamline your development process.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",

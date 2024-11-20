@@ -60,10 +60,10 @@ export class WhmcsClient {
    * Executes a WHMCS' API action with given parameters.
    * WHMCS' official action list available here: https://developers.whmcs.com/api/api-index/
    * @param action Command name
-   * @param parameters Request parameters (JSON Object)
+   * @param parameters (optional) Request parameters (JSON Object)
    * @param callback Optional callback. If not set the method returns a Promise
    */
-  callApi(action: string, parameters: Record<string, any>, callback?: (err: Error | null, data?: any) => void): Promise<any> | void {
+  callApi(action: string, parameters?: Record<string, any>, callback?: (err: Error | null, data?: any) => void): Promise<any> | void {
     const bodyParams = {
       action: action,
       username: this.username,
@@ -77,7 +77,7 @@ export class WhmcsClient {
     if (typeof parameters === 'function' && callback == null) {
       callback = parameters as any;
     } else {
-      utils.extend(bodyParams, parameters);
+      utils.extend(bodyParams, parameters || {});
     }
 
     const startRequest = (callback: (err: Error | null, data?: any) => void) => {

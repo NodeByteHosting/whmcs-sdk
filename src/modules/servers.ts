@@ -32,7 +32,7 @@ export class Servers {
      * @param {GetServersParams} parameters Request parameters
      * @param {Function} callback Optional callback. If not set the method returns a Promise
      */
-    getServers(parameters: GetServersParams, callback?: (err: Error | null, data?: any) => void): Promise<any> | void {
+    getServers(parameters?: GetServersParams, callback?: (err: Error | null, data?: any) => void): Promise<any> | void {
         return this.client.callApi('GetServers', parameters, callback);
     }
 }
