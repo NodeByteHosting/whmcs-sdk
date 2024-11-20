@@ -91,7 +91,7 @@ export class whmcsApi {
   get(action: string, opts: ModemOptions = {}, cb?: Callback): Promise<any> | void {
     if (typeof opts === 'function') {
       cb = opts;
-      opts = {}
+      opts = {};
     }
 
     return this.modem({ action: `Get${action}`, ...opts }, cb);
